@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Paragon</title>
+
+  <style>
+    html, body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  height: 100%;
+  overflow: hidden;
+}
+
+    /* Common base for your canvases */
+    canvas {
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    /* Main screen: fixed portrait ratio, scales to fit window */
+  #screenID {
+  display: block;
+  background: #000;
+  image-rendering: pixelated;
+}
+    #workID {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="screenID"></canvas>
+  <canvas id="workID" width="60" height="60"></canvas>
+  <script src="main.js" type="module"></script>
+</body>
+</html>
