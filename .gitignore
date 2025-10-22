@@ -1,5 +1,5 @@
 # Ignore everything by default
-/*
+*
 
 # But keep these folders and all their contents
 !.gitignore
@@ -14,6 +14,7 @@
 # Keep root files
 !index.html
 !main.js
+
 # Ignore editor/system files
 .vscode/
 .DS_Store
