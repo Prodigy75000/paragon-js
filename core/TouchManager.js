@@ -28,16 +28,14 @@ export class TouchManager {
 
   // --- Clean up event listeners ---
   dispose() {
-    if (!this.canvas) return;
+  if (!this.canvas) return;
 
-    this.canvas.removeEventListener("pointerdown", this._boundPointerDown);
-    this.canvas.removeEventListener("pointerup", this._boundPointerUp);
-    this.canvas.removeEventListener("pointermove", this._boundPointerMove);
-    this.canvas.removeEventListener("click", this._onPointer);
-    this.canvas.removeEventListener("touchstart", this._onPointer);
+  this.canvas.removeEventListener("pointerdown", this._boundPointerDown);
+  this.canvas.removeEventListener("pointerup", this._boundPointerUp);
+  this.canvas.removeEventListener("pointermove", this._boundPointerMove);
 
-    console.log("[TouchManager] Disposed listeners.");
-  }
+  console.log("[TouchManager] 🧹 Disposed pointer listeners.");
+}
 
   // --- Add and clear touch zones ---
   addZone(name, x, y, w, h, callback) {

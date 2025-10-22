@@ -62,4 +62,29 @@ export class ResizeManager {
       }×${this.baseHeight})`
     );
   }
+  update() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const aspect = 9 / 16;
+
+  let targetWidth, targetHeight;
+
+  if (w / h > aspect) {
+    // Wider than tall → landscape letterbox horizontally
+    targetHeight = h;
+    targetWidth = h * aspect;
+  } else {
+    // Taller than wide → portrait letterbox vertically
+    targetWidth = w;
+    targetHeight = w / aspect;
+  }
+
+  const scale = targetWidth / this.baseWidth;
+  this.canvas.style.width  = `${targetWidth}px`;
+  this.canvas.style.height = `${targetHeight}px`;
+  this.canvas.style.marginLeft = `${(w - targetWidth) / 2}px`;
+  this.canvas.style.marginTop  = `${(h - targetHeight) / 2}px`;
+  this.scale = scale;
+  if (this.onResize) this.onResize(scale);
+}
 }

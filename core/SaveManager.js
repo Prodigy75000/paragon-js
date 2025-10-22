@@ -1,15 +1,21 @@
 /**
  * @class SaveManager
- * Handles saving and loading game data via localStorage.
+ * Handles saving and loading game data via localStorage (async-safe).
+ * Future-proof: all methods return Promises, allowing migration to IndexedDB or filesystem later.
  */
 export class SaveManager {
   constructor(key = "PARAGON_SAVE") {
     this.key = key;
+    this.initialized = true;
   }
 
-  /** Save game state to localStorage */
-  saveGame(data = {}) {
+  /** Save game state asynchronously */
+  async saveGame(data = {}) {
     try {
+      if (!this.initialized) {
+        console.warn("[SaveManager] Ignored save — manager not initialized yet.");
+        return;
+      }
       if (!data || typeof data !== "object") return;
 
       // ⚠️ Skip invalid player saves
@@ -19,22 +25,19 @@ export class SaveManager {
       }
 
       const json = JSON.stringify(data);
-      localStorage.setItem(this.key, json);
+      await Promise.resolve(localStorage.setItem(this.key, json));
       console.log("[SaveManager] ✅ Game saved:", data);
     } catch (err) {
       console.error("[SaveManager] ❌ Save error:", err);
     }
   }
 
-  /** Load saved data from localStorage */
-  loadGame() {
+  /** Load game state asynchronously */
+  async loadGame() {
     try {
-      const json = localStorage.getItem(this.key);
+      const json = await Promise.resolve(localStorage.getItem(this.key));
       if (!json) {
-        console.warn(
-          "[SaveManager] No save found in localStorage for key:",
-          this.key
-        );
+        console.warn("[SaveManager] No save found for key:", this.key);
         return null;
       }
 
@@ -47,15 +50,20 @@ export class SaveManager {
     }
   }
 
-  /** Check if a save exists */
+  /** Check if a save exists (synchronous check is fine here) */
   hasSave() {
-    return localStorage.getItem(this.key) !== null;
+    try {
+      return localStorage.getItem(this.key) !== null;
+    } catch (err) {
+      console.error("[SaveManager] ❌ hasSave() error:", err);
+      return false;
+    }
   }
 
-  /** Delete save */
-  clearSave() {
+  /** Delete save asynchronously */
+  async clearSave() {
     try {
-      localStorage.removeItem(this.key);
+      await Promise.resolve(localStorage.removeItem(this.key));
       console.log("[SaveManager] 🗑️ Save cleared");
     } catch (err) {
       console.error("[SaveManager] ❌ Clear error:", err);

@@ -27,18 +27,8 @@ export default class MapView extends View {
     // Player starts at placeholder coordinates; will be repositioned onEnter
     this.player = new Player(0, 0, this.tileSize);
 
-    // Save immediately only if saveManager exists (do not autosave here)
-    if (this.manager?.saveManager) {
-      this.manager.saveManager.saveGame({
-        map: this.currentMapName,
-        player: {
-          x: this.player.x,
-          y: this.player.y,
-          instinct: this.player.instinct,
-        },
-        timestamp: Date.now(),
-      });
-    }
+    // 🟥 FIX: Removed premature save — it overwrote valid progress before map load
+    // Saving now happens only in onExit() or after proper initialization.
 
     // Event handlers will be attached dynamically in onEnter
     this._onCanvasClick = null;
@@ -63,45 +53,49 @@ export default class MapView extends View {
   }
 
   /** Called when this view becomes active */
+   /** Called when this view becomes active */
   async onEnter() {
     if (DEBUG.general) console.log("[MapView] Entering...");
-    // 1️⃣  Ensure TouchManager exists
+
+    // Ensure TouchManager exists
     if (!this.touch && this.canvas) {
       const { TouchManager } = await import("../core/TouchManager.js");
       this.touch = new TouchManager(this.canvas);
       if (DEBUG.general) console.log("[MapView] TouchManager initialized.");
     }
-    // 2️⃣  Immediately lock input for 300 ms
+
+    // Lock input for 300 ms
     if (this.touch) {
       if (DEBUG.general) console.log("[LockInput] Input locked for 300ms");
       this.touch._inputLocked = true;
-      setTimeout(() => {
+      this._unlockTimer = setTimeout(() => {
         this.touch._inputLocked = false;
         if (DEBUG.general) console.log("[LockInput] Input unlocked");
       }, 300);
     }
-    // 2️⃣  Attach your event listeners here if not already done
+
     const saveManager = this.manager?.saveManager;
     try {
-      // === 1️⃣ Load the map first (always awaited)
+      // === 1️⃣ Load the map first
       if (!this.manager._isResuming) {
         console.log("[MapView] Loading map...");
         await this.loadMap("map_tutorial");
         console.log("[MapView] Map loaded:", this.mapName);
 
-        // === 2️⃣ Then load player position from save (if exists)
-        const save = saveManager?.loadGame();
+        // === 2️⃣ Await asynchronous save load
+        const save = saveManager ? await saveManager.loadGame() : null;
 
         if (save?.player) {
           if (DEBUG.general) console.log("[MapView] Save found:", save);
 
-          // ✅ FIX: saved coordinates are already in pixels
+          // ✅ Restore exact pixel position from save
           this.player.x = save.player.x;
           this.player.y = save.player.y;
+          this.player.instinct = save.player.instinct ?? this.player.instinct;
 
           if (DEBUG.general)
             console.log(
-              "[MapView] Player position loaded (pixels):",
+              "[MapView] Player position restored:",
               this.player.x,
               this.player.y
             );
@@ -116,11 +110,9 @@ export default class MapView extends View {
           this.player.y = this.spawnY;
         }
 
-        // Sync movement targets
         this.player.targetX = this.player.x;
         this.player.targetY = this.player.y;
 
-        // Optional sanity check
         if (
           this.player.x > this.width * this.tileSize ||
           this.player.y > this.height * this.tileSize
@@ -140,14 +132,12 @@ export default class MapView extends View {
           );
       }
 
-      // Reset temporary flags
       this.manager._isResuming = false;
       this.manager._loadedFromSave = false;
 
-      // === 3️⃣ Bind inputs after everything is ready ===
+      // === 3️⃣ Bind inputs after load is complete
       if (!this._onCanvasClick) {
         this._onCanvasClick = (e) => {
-          // Use shared input lock instead of local flag
           if (this.touch?._inputLocked) {
             if (DEBUG.general)
               console.log("[MapView] Ignored click (input locked)");
@@ -164,7 +154,6 @@ export default class MapView extends View {
         this.canvas.addEventListener("click", this._onCanvasClick);
       }
 
-      // Pause key
       if (!this._onPauseKey) {
         this._onPauseKey = (e) => {
           if (e.key === "Escape" || e.key.toLowerCase() === "p") {
@@ -172,12 +161,8 @@ export default class MapView extends View {
             this.manager.setActiveView("PauseMenuView");
           }
         };
-
         document.addEventListener("keydown", this._onPauseKey);
       }
-
-      this.canvas.addEventListener("click", this._onCanvasClick);
-      document.addEventListener("keydown", this._onPauseKey);
 
       if (DEBUG.general)
         console.log(
@@ -231,7 +216,11 @@ export default class MapView extends View {
     // --- 4️⃣ Reset input lock flags ---
     if (this.touch) this.touch._inputLocked = false;
     this._inputLocked = false;
-
+if (this.touch) {
+  this.touch.dispose?.();
+  this.touch = null;
+  if (DEBUG.general) console.log("[MapView] TouchManager disposed");
+}
     console.log("[MapView] Exited cleanly — state reset and listeners cleared");
   }
   /** Load and parse Tiled map JSON */

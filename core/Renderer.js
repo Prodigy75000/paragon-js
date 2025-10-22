@@ -1,5 +1,9 @@
 import { RenderConfig } from "../config/RenderConfig.js";
-
+/**
+ * Stores the current display scale.
+ * Consumers (TouchManager, UI Views) must read renderer.scale
+ * to align logical coords with CSS-scaled canvas.
+ */
 export class Renderer {
   constructor(tilePath, spritePath, tileSize = 32, spriteSize = 64) {
     // --- Load tileset and spritesheet ---

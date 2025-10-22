@@ -3,8 +3,8 @@ import { RenderConfig } from "../config/RenderConfig.js";
 import { MenuViewBase, UI_METRICS as UI } from "./MenuViewBase.js";
 import { DEBUG } from "../config/debug.js";
 export default class CharacterSelectView extends MenuViewBase {
-  constructor({ manager, canvas, settingsManager, renderer } = {}) {
-    super("CharacterSelectView");
+ constructor({ manager, canvas, settingsManager, renderer } = {}) {
+  super({ name: "CharacterSelectView", manager, canvas, settingsManager, renderer });
     this.manager = manager || null;
     this.canvas = canvas || document.getElementById("screenID");
     this.settingsManager = settingsManager || null;
@@ -22,6 +22,7 @@ export default class CharacterSelectView extends MenuViewBase {
       Reason: null,
       Insight: null,
     };
+    
     // === Instincts ===
     this.instincts = [
       { name: "Faith", desc: "Only devotion endures." },
@@ -159,22 +160,19 @@ export default class CharacterSelectView extends MenuViewBase {
     this.statMaxima = this._computeStatMaxima();
     
   }
+  
   async onEnter() {
   super.onEnter?.();
 
   // ✅ Always reset when re-entering from TitleView
-  this.phase = "instinct";
+  this._setPhase("instinct");
+
   this.selectedInstinct = null;
   this.selectedIndex = 0;
   this.isTransitioning = false;
   this.transitionAlpha = 0;
   this.transitionDirection = 1;
 
-  // rebuild base zones
-  if (this.touch) {
-    this.touch.clearZones();
-    this.setupTouchZones();
-  }
 
   if (DEBUG.general)
     console.log("[CharacterSelectView] Entered, reset to instinct phase.");
@@ -265,6 +263,7 @@ export default class CharacterSelectView extends MenuViewBase {
     ctx.restore();
     return topY + panelHeight;
   }
+ 
   _setPhase(newPhase) {
   // Avoid redundant resets
   if (this.phase === newPhase) return;
@@ -327,7 +326,7 @@ export default class CharacterSelectView extends MenuViewBase {
         () => {
           if (this.selectedInstinct === null)
             this.selectedInstinct = this.instincts[this.selectedIndex].name;
-          this.phase = "instinctDetails";
+          this._setPhase("instinctDetails");     // instinctDetails
           if (this.touch) {
             this.touch.clearZones();
             this.setupTouchZones();
@@ -374,7 +373,7 @@ export default class CharacterSelectView extends MenuViewBase {
         UI.BUTTON_WIDTH,
         UI.BUTTON_HEIGHT,
         () => {
-          this.phase = "profile";
+          this._setPhase("profile");
           if (this.touch) {
             this.touch.clearZones();
             this.setupTouchZones();
@@ -389,7 +388,7 @@ export default class CharacterSelectView extends MenuViewBase {
         UI.BUTTON_WIDTH,
         UI.BUTTON_HEIGHT,
         () => {
-          this.phase = "instinct";
+          this._setPhase("instinct");
           this.selectedInstinct = null;
           this.selectedIndex = 0;
           if (this.touch) {
@@ -411,7 +410,7 @@ export default class CharacterSelectView extends MenuViewBase {
         () => {
           if (DEBUG.general)
             console.log("[TouchManager] tapped BackFromInstinctDetails");
-          this.phase = "instinct";
+          this._setPhase("instinct");
           if (this.touch) {
             this.touch.clearZones();
             this.setupTouchZones();
@@ -429,7 +428,7 @@ export default class CharacterSelectView extends MenuViewBase {
         UI.BUTTON_WIDTH,
         UI.BUTTON_HEIGHT,
         () => {
-          this.phase = "character";
+          this._setPhase("character");
           if (this.touch) {
             this.touch.clearZones();
             this.setupTouchZones();
@@ -466,7 +465,7 @@ export default class CharacterSelectView extends MenuViewBase {
           if (Object.values(this.selectedCharacters).every((v) => v))
             this.manager.setActiveView("MapView");
           else {
-            this.phase = "instinct";
+            this._setPhase("instinct");
             this.selectedInstinct = null;
             this.selectedIndex = 0;
             if (this.touch) {
@@ -484,7 +483,7 @@ export default class CharacterSelectView extends MenuViewBase {
         UI.CONFIRM_BUTTON_WIDTH,
         UI.CONFIRM_BUTTON_HEIGHT,
         () => {
-          this.phase = "character";
+          this._setPhase("character");
           if (this.touch) {
             this.touch.clearZones();
             this.setupTouchZones();
@@ -545,7 +544,7 @@ export default class CharacterSelectView extends MenuViewBase {
       this.transitionAlpha += this.transitionDirection * dt * 2;
       this.transitionAlpha = Math.max(0, Math.min(1, this.transitionAlpha));
       if (this.transitionDirection === 1 && this.transitionAlpha >= 1) {
-        this.phase = "character";
+        this._setPhase("character");
         this.transitionDirection = -1;
         if (this.touch) {
           this.touch.clearZones();
@@ -921,35 +920,35 @@ export default class CharacterSelectView extends MenuViewBase {
     switch (this.phase) {
       case "instinct":
         if (["UP", "DOWN"].includes(action)) this._cycle(action); // invert fix
-        if (action === "DETAILS") this.phase = "instinctDetails";
+        if (action === "DETAILS") this._setPhase("instinctDetails");;
         if (["CONFIRM", "OK"].includes(action)) {
           const inst = this.instincts[this.selectedIndex].name;
           if (!this.selectedCharacters[inst]) this._beginTransition();
         }
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "exitConfirm";
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("exitConfirm");
         break;
 
       case "character":
         if (["UP", "DOWN"].includes(action)) this._cycle(action);
-        if (action === "DETAILS") this.phase = "profile"; // new profile phase
-        if (["CONFIRM", "OK"].includes(action)) this.phase = "confirm";
+        if (action === "DETAILS") this._setPhase("profile"); // new profile phase
+        if (["CONFIRM", "OK"].includes(action)) this._setPhase("confirm");
         if (["BACK", "CANCEL"].includes(action)) {
-          this.phase = "instinct";
+          this._setPhase("instinct");
           this.selectedInstinct = null;
           this.selectedIndex = 0;
         }
         break;
       case "profile":
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "character";
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("character");
         break;
 
       case "details":
-        if (["CONFIRM", "OK"].includes(action)) this.phase = "confirm";
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "character";
+        if (["CONFIRM", "OK"].includes(action)) this._setPhase("confirm");
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("character");
         break;
 
       case "instinctDetails":
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "instinct";
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("instinct");
         break;
 
       case "confirm":
@@ -959,18 +958,18 @@ export default class CharacterSelectView extends MenuViewBase {
           if (Object.values(this.selectedCharacters).every((v) => v))
             this.manager.setActiveView("MapView");
           else {
-            this.phase = "instinct";
+            this._setPhase("instinct");
             this.selectedInstinct = null;
             this.selectedIndex = 0;
           }
         }
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "character";
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("character");
         break;
 
       case "exitConfirm":
         if (["CONFIRM", "OK"].includes(action))
           this.manager.setActiveView("TitleView");
-        if (["BACK", "CANCEL"].includes(action)) this.phase = "instinct";
+        if (["BACK", "CANCEL"].includes(action)) this._setPhase("instinct");
         break;
     }
   }
@@ -990,7 +989,7 @@ export default class CharacterSelectView extends MenuViewBase {
 
     const selected = this.instincts[this.selectedIndex];
     this.selectedInstinct = selected.name;
-    this.phase = "transition";
+    this._setPhase("transition");
     this.isTransitioning = true;
     this.transitionAlpha = 0;
     this.transitionDirection = 1;
