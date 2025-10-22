@@ -63,6 +63,10 @@ export class ResizeManager {
     );
   }
   update() {
+    if (!this.canvas) {
+    console.warn("[ResizeManager] update() called before canvas ready");
+    return;
+  }
   const w = window.innerWidth;
   const h = window.innerHeight;
   const aspect = 9 / 16;
@@ -79,12 +83,14 @@ export class ResizeManager {
     targetHeight = w / aspect;
   }
 
-  const scale = targetWidth / this.baseWidth;
+    // 🟩 2. Apply CSS safely, always reset margin before recentering
+  const canvas = this.canvas;
+  canvas.style.margin = "0"; // resets all sides to avoid stale values
   this.canvas.style.width  = `${targetWidth}px`;
   this.canvas.style.height = `${targetHeight}px`;
   this.canvas.style.marginLeft = `${(w - targetWidth) / 2}px`;
   this.canvas.style.marginTop  = `${(h - targetHeight) / 2}px`;
-  this.scale = scale;
+  this._scale = scale;
   if (this.onResize) this.onResize(scale);
 }
 }

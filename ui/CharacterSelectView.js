@@ -408,7 +408,7 @@ export default class CharacterSelectView extends MenuViewBase {
         UI.BUTTON_WIDTH,
         UI.BUTTON_HEIGHT,
         () => {
-          if (DEBUG.general)
+          if (DEBUG.touch)
             console.log("[TouchManager] tapped BackFromInstinctDetails");
           this._setPhase("instinct");
           if (this.touch) {

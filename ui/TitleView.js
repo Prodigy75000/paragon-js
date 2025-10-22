@@ -7,9 +7,8 @@ export default class TitleView extends MenuViewBase {
     this.title = "PARAGON";
   }
   async onEnter() {
-    super.onEnter(); // ensures touch manager + lockInput
-    this.setupTouchZones();
-  }
+  await super.onEnter(); // await ensures base setup finishes cleanly
+}
   setupTouchZones() {
     const { width: w, height: h } = this.canvas;
     const hasSave = this.manager.saveManager?.hasSave();

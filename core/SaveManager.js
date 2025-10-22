@@ -20,9 +20,9 @@ export class SaveManager {
 
       // ⚠️ Skip invalid player saves
       if (data.player && data.player.x === 0 && data.player.y === 0) {
-        console.warn("[SaveManager] Ignoring invalid save (0,0)");
-        return;
-      }
+  console.warn("[SaveManager] Saving at default spawn (0,0) — no spawn layer found.");
+  // do NOT return; still proceed to write
+} 
 
       const json = JSON.stringify(data);
       await Promise.resolve(localStorage.setItem(this.key, json));

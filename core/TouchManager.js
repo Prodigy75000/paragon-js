@@ -1,3 +1,4 @@
+import { DEBUG } from "../config/debug.js";
 // core/TouchManager.js
 export class TouchManager {
   constructor(canvas) {
@@ -23,7 +24,13 @@ export class TouchManager {
     // this.canvas.addEventListener("click", e => this._onPointer(e));
     // this.canvas.addEventListener("touchstart", e => this._onPointer(e.touches[0]));
 
-    console.log("[TouchManager] Initialized and listening for pointer events.");
+    if (DEBUG.touch) {
+  console.log("[TouchManager] Initialized and listening for pointer events.", zone);
+}
+
+  }
+  _log(message, ...args) {
+    if (DEBUG.touch) console.log(`[TouchManager] ${message}`, ...args);
   }
 
   // --- Clean up event listeners ---
@@ -34,7 +41,9 @@ export class TouchManager {
   this.canvas.removeEventListener("pointerup", this._boundPointerUp);
   this.canvas.removeEventListener("pointermove", this._boundPointerMove);
 
-  console.log("[TouchManager] 🧹 Disposed pointer listeners.");
+ if (DEBUG.touch) {
+  console.log("[TouchManager] Disposed Pointer Listeners", zone);
+}
 }
 
   // --- Add and clear touch zones ---

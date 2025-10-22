@@ -175,7 +175,7 @@ export default class MapView extends View {
     }
   }
   /** Called when leaving this view */
-  onExit() {
+  async onExit() {
     if (DEBUG.general) console.log("[MapView] Exiting, autosaving...");
 
     // --- 1️⃣ Clear any pending unlock timer ---
@@ -197,21 +197,21 @@ export default class MapView extends View {
 
     if (DEBUG.general) console.log("[MapView] Listeners removed successfully");
 
-    // --- 3️⃣ Autosave player state ---
-    try {
-      this.manager.saveManager.saveGame({
-        map: this.currentMapName,
-        player: {
-          x: this.player.x,
-          y: this.player.y,
-          instinct: this.player.instinct,
-        },
-        timestamp: Date.now(),
-      });
-      if (DEBUG.general) "[MapView] Autosave complete";
-    } catch (err) {
-      console.warn("[MapView] Autosave failed:", err);
-    }
+  // --- 3️⃣ Autosave player state ---
+try {
+  await this.manager.saveManager.saveGame({
+    map: this.mapName, // ✅ fixed key
+    player: {
+      x: this.player.x,
+      y: this.player.y,
+      instinct: this.player.instinct,
+    },
+    timestamp: Date.now(),
+  });
+  if (DEBUG.general) console.log("[MapView] Autosave complete");
+} catch (err) {
+  console.warn("[MapView] Autosave failed:", err);
+}
 
     // --- 4️⃣ Reset input lock flags ---
     if (this.touch) this.touch._inputLocked = false;
