@@ -1,0 +1,8 @@
+{
+  "language": "en",
+  "music": true,
+  "soundFx": true,
+  "pixelFilter": "nearest",
+  "uiScale": 1.0,
+  "screenShake": true
+}

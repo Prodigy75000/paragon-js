@@ -1,7 +1,8 @@
 # Ignore everything by default
 *
 
-# But keep these folders and all their contents
+# But DO descend into folders we care about
+!*/
 !.gitignore
 !core/**
 !ui/**
