@@ -28,9 +28,9 @@ export class Renderer {
   }
 
   // External scale setter (e.g., ResizeManager)
-  setScale(scale) {
-    this._scale = scale;
-  }
+ setScale(scale) {
+  this.scale = scale;
+}
 
   // --- Draw a tile (no internal scale to avoid double-scaling) ---
   drawTile(ctx, tileIndex, x, y) {

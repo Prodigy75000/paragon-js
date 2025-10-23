@@ -11,86 +11,92 @@ export class ResizeManager {
     this.baseHeight = baseHeight;
     this._scale = 1;
     this.onResize = null;
-    // Store bound functions so we can remove them later
+    this.debug = false; // disable noisy logs in production
+
+    // Bind for event listeners
     this._boundResize = this.resize.bind(this);
     this._boundOrientation = this.resize.bind(this);
-    // Listen for window resize/orientation changes
+
     window.addEventListener("resize", this._boundResize);
     window.addEventListener("orientationchange", this._boundOrientation);
+
     // Initial resize
     this.resize();
+
     if (!canvas) {
       console.warn("[ResizeManager] No canvas provided to ResizeManager.");
     }
   }
+
   dispose() {
     window.removeEventListener("resize", this._boundResize);
     window.removeEventListener("orientationchange", this._boundOrientation);
-    console.log("[ResizeManager] Disposed and listeners removed.");
+    if (this.debug) console.log("[ResizeManager] Disposed and listeners removed.");
   }
+
   // Current scale factor
   get scale() {
     return this._scale || 1;
   }
+
+  /**
+   * Unified resize handler (merges old resize() + update()).
+   * Maintains a 9:16 portrait aspect ratio while centering the canvas.
+   */
   resize() {
     if (!this.canvas) {
       console.warn("[ResizeManager] resize() called before canvas is set");
       return;
     }
+
     const { innerWidth: w, innerHeight: h } = window;
-    // maintain a 9:16 aspect ratio (portrait)
-    const targetHeight = h;
-    const targetWidth = (h * 9) / 16;
-    // compute scale based on logical resolution
+    const aspect = 9 / 16;
+
+    let targetWidth, targetHeight;
+
+    if (w / h > aspect) {
+      // Window is wider than target → letterbox horizontally
+      targetHeight = h;
+      targetWidth = h * aspect;
+    } else {
+      // Window is taller than target → letterbox vertically
+      targetWidth = w;
+      targetHeight = w / aspect;
+    }
+
+    // Compute scale relative to logical resolution
     const scaleX = targetWidth / this.baseWidth;
     const scaleY = targetHeight / this.baseHeight;
     const scale = Math.min(scaleX, scaleY);
-    // store scale
     this._scale = scale;
-    // use CSS to scale, do NOT modify internal canvas resolution
-    this.canvas.style.width = `${this.baseWidth * scale}px`;
-    this.canvas.style.height = `${this.baseHeight * scale}px`;
-    // horizontally center the canvas
-    const leftPad = (w - this.baseWidth * scale) / 2;
-    this.canvas.style.marginLeft = `${Math.max(0, leftPad)}px`;
-    // callback on resize
-    if (typeof this.onResize === "function") this.onResize(scale);
 
-    console.log(
-      `[ResizeManager] Portrait resize → scale=${scale.toFixed(2)} (${
-        this.baseWidth
-      }×${this.baseHeight})`
-    );
+    // Apply CSS (do not alter internal canvas resolution)
+    const canvas = this.canvas;
+    canvas.style.width = `${this.baseWidth * scale}px`;
+    canvas.style.height = `${this.baseHeight * scale}px`;
+
+    // Center canvas
+    const marginLeft = (w - this.baseWidth * scale) / 2;
+    const marginTop = (h - this.baseHeight * scale) / 2;
+    canvas.style.marginLeft = `${Math.max(0, marginLeft)}px`;
+    canvas.style.marginTop = `${Math.max(0, marginTop)}px`;
+
+    // Callback hook
+    if (typeof this.onResize === "function") {
+      this.onResize(scale);
+    }
+
+    if (this.debug) {
+      console.log(
+        `[ResizeManager] resize() → ${Math.round(w)}×${Math.round(h)} | scale=${scale.toFixed(2)}`
+      );
+    }
   }
+
+  /**
+   * Alias for backward compatibility with old code calling update()
+   */
   update() {
-    if (!this.canvas) {
-    console.warn("[ResizeManager] update() called before canvas ready");
-    return;
+    this.resize();
   }
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const aspect = 9 / 16;
-
-  let targetWidth, targetHeight;
-
-  if (w / h > aspect) {
-    // Wider than tall → landscape letterbox horizontally
-    targetHeight = h;
-    targetWidth = h * aspect;
-  } else {
-    // Taller than wide → portrait letterbox vertically
-    targetWidth = w;
-    targetHeight = w / aspect;
-  }
-
-    // 🟩 2. Apply CSS safely, always reset margin before recentering
-  const canvas = this.canvas;
-  canvas.style.margin = "0"; // resets all sides to avoid stale values
-  this.canvas.style.width  = `${targetWidth}px`;
-  this.canvas.style.height = `${targetHeight}px`;
-  this.canvas.style.marginLeft = `${(w - targetWidth) / 2}px`;
-  this.canvas.style.marginTop  = `${(h - targetHeight) / 2}px`;
-  this._scale = scale;
-  if (this.onResize) this.onResize(scale);
-}
 }

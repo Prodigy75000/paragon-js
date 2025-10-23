@@ -11,7 +11,6 @@ import MapView from "./ui/MapView.js";
 import CharacterSelectView from "./ui/CharacterSelectView.js";
 import OptionsView from "./ui/OptionsView.js";
 import PauseMenuView from "./ui/PauseMenuView.js";
-import { DEBUG } from "./config/debug.js";
 
 window.addEventListener("load", async () => {
   const TILE_SIZE = 32;
