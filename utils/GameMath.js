@@ -1,10 +1,4 @@
-export function toTileCoords(x, y, tileSize) {
-  return {
-    x: Math.floor(x / tileSize),
-    y: Math.floor(y / tileSize),
-  };
-}
-
-export function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
+// utils/GameMath.js
+// Placeholder for future game-specific math utilities.
+// Potential contents: pathfinding, physics forces, random spawn logic, etc.
+export {};

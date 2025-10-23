@@ -2,13 +2,15 @@ import { DEFAULT_SETTINGS } from "../core/SettingsManager.js";
 import { MenuViewBase, UI_METRICS as UI } from "./MenuViewBase.js";
 
 export default class OptionsView extends MenuViewBase {
-  constructor({ manager, canvas, settingsManager } = {}) {
-    super("OptionsView");
-    this.manager = manager || null;
-    this.canvas = canvas || document.getElementById("screenID");
+  constructor({ manager = null, canvas = null, settingsManager = null } = {}) {
+    const screen = canvas || document.getElementById("screenID");
+    super({ id: "OptionsView", manager, canvas: screen });
+
+    this.manager = manager;
+    this.canvas = screen;
     this.touch = null;
-    this.settingsManager = settingsManager || null;
-    this.settings = this.#resolveSettings();
+    this.settingsManager = settingsManager;
+    this.settings = this.#resolveSettings(); // ✅ OK now
     this.layout = null;
   }
   #resolveSettings() {

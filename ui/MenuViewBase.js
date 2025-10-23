@@ -28,7 +28,9 @@ export class MenuViewBase extends View {
     if (!this.touch && this.canvas) {
       this.touch = new TouchManager(this.canvas);
     }
+      if (this.touch) {
     this.touch.clearZones();
+  }
 
     // NEW: setup zones defined by the child view
     this.setupTouchZones?.();

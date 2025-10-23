@@ -1,7 +1,6 @@
 import { Player } from "../world/Player.js";
 import { View } from "../core/View.js";
 import { RenderConfig } from "../config/RenderConfig.js";
-import { MenuViewBase } from "./MenuViewBase.js";
 import { DEBUG } from "../config/debug.js";
 /**
  * @class MapView
@@ -199,8 +198,13 @@ export default class MapView extends View {
 
   // --- 3️⃣ Autosave player state ---
 try {
+  if (!this.manager?.saveManager?.saveGame) {
+    if (DEBUG.general) console.warn("[MapView] No saveManager — skipping autosave");
+    return;
+  }
+
   await this.manager.saveManager.saveGame({
-    map: this.mapName, // ✅ fixed key
+    map: this.mapName,
     player: {
       x: this.player.x,
       y: this.player.y,
@@ -208,6 +212,7 @@ try {
     },
     timestamp: Date.now(),
   });
+
   if (DEBUG.general) console.log("[MapView] Autosave complete");
 } catch (err) {
   console.warn("[MapView] Autosave failed:", err);
